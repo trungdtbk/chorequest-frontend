@@ -30,20 +30,10 @@ import PetLevelBadge from '../components/PetLevelBadge';
 import { QuestBoardOverlay, QuestBoardPageGlow, QuestBoardParticles, QuestBoardDecorations, QuestBoardTitle, BOARD_THEMES, getTheme } from '../components/QuestBoardTheme';
 import { renderPet, renderPetExtras, renderPetAccessory, buildPetColors } from '../components/avatar';
 
+import { getMondayOfWeekForGivenDate, toISO } from '../utils/dateUtils';
 // ---------- helpers ----------
 
-function getMondayOfThisWeek() {
-  const now = new Date();
-  const day = now.getDay(); // 0=Sun, 1=Mon, ...
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  return monday.toISOString().slice(0, 10);
-}
 
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 function difficultyLabel(difficulty) {
   switch (difficulty) {
@@ -111,12 +101,12 @@ export default function KidDashboard() {
   const fetchData = useCallback(async () => {
     try {
       setError(null);
-      const monday = getMondayOfThisWeek();
-      const today = todayISO();
+      const today = new Date();
+      const monday = getMondayOfWeekForGivenDate(today);
 
       const promises = [
         api('/api/chores'),
-        api(`/api/calendar?week_start=${monday}`),
+        api(`/api/calendar?week_start=${toISO(monday)}`),
       ];
       if (spin_wheel_enabled) {
         promises.push(api('/api/spin/availability'));
@@ -138,7 +128,7 @@ export default function KidDashboard() {
       setChores(choresRes);
 
       // Filter calendar assignments to today and this user only
-      const allToday = (calendarRes.days && calendarRes.days[today]) || [];
+      const allToday = (calendarRes.days && calendarRes.days[toISO(today)]) || [];
       const todayAssignments = allToday.filter((a) => a.user_id === user?.id);
       setAssignments(todayAssignments);
 
