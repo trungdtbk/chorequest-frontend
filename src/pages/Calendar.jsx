@@ -7,6 +7,13 @@ import { useTheme } from '../hooks/useTheme';
 import { themedTitle } from '../utils/questThemeText';
 import Modal from '../components/Modal';
 import {
+  getMondayOfWeekForGivenDate,
+  toISO,
+  formatDate,
+  formatDateShort,
+} from '../utils/dateUtils';
+import { addDays } from 'date-fns';
+import {
   ChevronLeft,
   ChevronRight,
   CheckCheck,
@@ -19,20 +26,11 @@ import {
   Trash2,
 } from 'lucide-react';
 
-function toISO(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function addDays(dateStr, n) {
-  const d = new Date(dateStr + 'T00:00:00');
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
-
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function statusStyle(assignment, dayStr) {
-  const today = new Date().toISOString().slice(0, 10);
+function statusStyle(assignment, date) {
+  //const today = new Date().toISOString().slice(0, 10);
+  const today = new Date();
 
   if (assignment.status === 'verified') {
     return {
@@ -57,7 +55,7 @@ function statusStyle(assignment, dayStr) {
     };
   }
   // pending
-  if (dayStr < today) {
+  if (date < today) {
     // overdue
     return {
       border: 'border-crimson',
@@ -79,7 +77,7 @@ export default function Calendar() {
   const { colorTheme } = useTheme();
   const isKid = user?.role === 'kid';
 
-  const [startDate, setStartDate] = useState(() => toISO(new Date()));
+  const [startDate, setStartDate] = useState(() => new Date());
   const [assignments, setAssignments] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -102,27 +100,26 @@ export default function Calendar() {
     try {
       // The backend requires week_start to be a Monday. Our 7-day window
       // may span two Mon-Sun weeks, so fetch both if needed.
-      const d = new Date(startDate + 'T00:00:00');
-      const dayOfWeek = d.getDay(); // 0=Sun..6=Sat
-      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      const monday1 = addDays(startDate, mondayOffset);
+      const monday1 = getMondayOfWeekForGivenDate(startDate);
+      const monday2 = addDays(monday1, 7);
+      console.log('Fetching calendar for weeks starting', toISO(monday1), 'and', toISO(monday2));
 
-      const data = await api(`/api/calendar?week_start=${monday1}`);
+      const data = await api(`/api/calendar?week_start=${toISO(monday1)}`);
       const byDay = {};
       for (let i = 0; i < 7; i++) {
-        const dayKey = addDays(startDate, i);
+        const dayKey = toISO(addDays(startDate, i));
         byDay[dayKey] = data.days?.[dayKey] || [];
       }
 
       // If our window extends past Sunday of that week, fetch next week too
-      const monday2 = addDays(monday1, 7);
+      //const monday2 = addDays(monday1, 7);
       const lastDay = addDays(startDate, 6);
       const sunday1 = addDays(monday1, 6);
       if (lastDay > sunday1) {
         try {
-          const data2 = await api(`/api/calendar?week_start=${monday2}`);
+          const data2 = await api(`/api/calendar?week_start=${toISO(monday2)}`);
           for (let i = 0; i < 7; i++) {
-            const dayKey = addDays(startDate, i);
+            const dayKey = toISO(addDays(startDate, i));
             if (!byDay[dayKey]?.length && data2.days?.[dayKey]) {
               byDay[dayKey] = data2.days[dayKey];
             }
@@ -150,7 +147,7 @@ export default function Calendar() {
 
   const prevWeek = () => setStartDate(addDays(startDate, -7));
   const nextWeek = () => setStartDate(addDays(startDate, 7));
-  const goToday = () => setStartDate(toISO(new Date()));
+  const goToday = () => setStartDate(new Date());
 
   const openTrade = async (assignment) => {
     setTradeAssignment(assignment);
@@ -219,12 +216,12 @@ export default function Calendar() {
   };
 
   const endDate = addDays(startDate, 6);
-  const today = toISO(new Date());
+  const today = new Date();
   const isAtToday = startDate === today;
-  const formatShortDate = (str) => {
-    const d = new Date(str + 'T00:00:00');
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  };
+  // const formatShortDate = (str) => {
+  //   const d = new Date(str + 'T00:00:00');
+  //   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  // };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -246,7 +243,7 @@ export default function Calendar() {
             </button>
 
             <span className="text-cream text-sm min-w-[140px] sm:min-w-[180px] text-center">
-              {formatShortDate(startDate)} &ndash; {formatShortDate(endDate)}
+              {formatDateShort(startDate)} &ndash; {formatDateShort(endDate)}
             </span>
 
             <button
@@ -307,17 +304,18 @@ export default function Calendar() {
       {!loading && (
         <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
           {Array.from({ length: 7 }, (_, i) => {
-            const dayStr = addDays(startDate, i);
-            const d = new Date(dayStr + 'T00:00:00');
+            // const dayStr = addDays(startDate, i);
+            // const d = new Date(dayStr + 'T00:00:00');
+            const d = addDays(startDate, i);
             const label = SHORT_DAYS[d.getDay()];
-            const isToday = dayStr === today;
-            const allDayAssignments = assignments[dayStr] || [];
+            const isToday = d === today;
+            const allDayAssignments = assignments[toISO(d)] || [];
             const dayAssignments = isKid
               ? allDayAssignments.filter((a) => a.user_id === user?.id)
               : allDayAssignments;
 
             return (
-              <div key={dayStr} className="min-w-0">
+              <div key={toISO(d)} className="min-w-0">
                 {/* Day header */}
                 <div
                   className={`text-center py-2 px-1 rounded-t-md border-b ${
@@ -330,7 +328,7 @@ export default function Calendar() {
                     {label}
                   </div>
                   <div className="text-sm mt-1">
-                    {new Date(dayStr + 'T00:00:00').getDate()}
+                    {d.getDate()}
                   </div>
                 </div>
 
@@ -342,7 +340,7 @@ export default function Calendar() {
                     </p>
                   )}
                   {dayAssignments.map((a) => {
-                    const style = statusStyle(a, dayStr);
+                    const style = statusStyle(a, d);
                     return (
                       <div
                         key={a.id}
