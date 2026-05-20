@@ -26,6 +26,7 @@ import {
   ScrollText,
   Zap,
 } from 'lucide-react';
+import { getMondayOfWeekForGivenDate, toISO } from '../utils/dateUtils';
 
 const DIFFICULTY_OPTIONS = [
   { value: 'easy', label: 'Easy', level: 1 },
@@ -79,19 +80,6 @@ function RecurrenceIndicator({ recurrence, customDays }) {
   );
 }
 
-function getMondayOfThisWeek() {
-  const now = new Date();
-  const day = now.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  return monday.toISOString().slice(0, 10);
-}
-
-function todayISO() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 export default function Chores() {
   const { user } = useAuth();
   const { colorTheme } = useTheme();
@@ -135,10 +123,10 @@ export default function Chores() {
   const fetchAssignments = useCallback(async () => {
     if (!isKid) return;
     try {
-      const monday = getMondayOfThisWeek();
-      const today = todayISO();
-      const calendarRes = await api(`/api/calendar?week_start=${monday}`);
-      const dayAssignments = (calendarRes.days && calendarRes.days[today]) || [];
+      const today = toISO(new Date());
+      const monday = getMondayOfWeekForGivenDate(today);
+      const calendarRes = await api(`/api/calendar?week_start=${toISO(monday)}`);
+      const dayAssignments = (calendarRes.days && calendarRes.days[toISO(today)]) || [];
       setTodayAssignments(dayAssignments);
     } catch {
       // Non-critical
