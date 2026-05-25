@@ -209,15 +209,22 @@ export default function Chores() {
     ? (activeTab === 'library' ? libraryChores : activeChores)
     : chores;
 
-  const filteredChores = currentChores.filter((chore) => {
-    if (filterCategory && chore.category?.name !== filterCategory) return false;
-    if (filterDifficulty && chore.difficulty !== filterDifficulty) return false;
-    if (isKid && !showCompleted) {
-      const status = assignmentStatusMap[chore.id];
-      if (status === 'completed' || status === 'verified') return false;
-    }
-    return true;
-  });
+  const filteredChores = currentChores
+    .filter((chore) => {
+      if (filterCategory && chore.category?.name !== filterCategory) return false;
+      if (filterDifficulty && chore.difficulty !== filterDifficulty) return false;
+      if (isKid && !showCompleted) {
+        const status = assignmentStatusMap[chore.id];
+        if (status === 'completed' || status === 'verified') return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      const aPending = assignmentStatusMap[a.id] === 'pending' ? 0 : 1;
+      const bPending = assignmentStatusMap[b.id] === 'pending' ? 0 : 1;
+      if (aPending !== bPending) return aPending - bPending;
+      return a.title?.localeCompare(b.title || '') || 0;
+    });
 
   const completedCount = isKid
     ? Object.values(assignmentStatusMap).filter((s) => s === 'completed' || s === 'verified').length
