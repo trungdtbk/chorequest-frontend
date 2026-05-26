@@ -13,6 +13,7 @@ import {
   Camera,
   MessageSquare,
   Send,
+  X,
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
 import { themedTitle } from '../utils/questThemeText';
@@ -22,6 +23,7 @@ import AvatarDisplay from '../components/AvatarDisplay';
 import Modal from '../components/Modal';
 
 export default function ParentDashboard() {
+  const [lightboxPhoto, setLightboxPhoto] = useState(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { colorTheme } = useTheme();
@@ -327,7 +329,8 @@ export default function ParentDashboard() {
                       <img
                         src={`/api/uploads/${assignment.photo_proof_path}`}
                         alt="Photo proof"
-                        className="rounded-md max-h-48 object-cover border border-border"
+                        className="rounded-md max-h-48 object-cover border border-border cursor-zoom-in hover:opacity-90 transition-opacity"
+                        onClick={() => setLightboxPhoto(`/api/uploads/${assignment.photo_proof_path}`)}
                       />
                     </div>
                   )}
@@ -360,6 +363,27 @@ export default function ParentDashboard() {
                       Feedback: {assignment.feedback}
                     </p>
                   )}
+
+                  {lightboxPhoto && (
+                    <div
+                      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+                      onClick={() => setLightboxPhoto(null)}
+                    >
+                      <button
+                        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors"
+                        onClick={() => setLightboxPhoto(null)}
+                      >
+                        <X size={24} />
+                      </button>
+                      <img
+                        src={lightboxPhoto}
+                        alt="Photo proof"
+                        className="max-w-full max-h-[90vh] object-contain rounded-md shadow-xl"
+                        onClick={(e) => e.stopPropagation()}  // prevent close when clicking image
+                      />
+                    </div>
+                  )}
+
                 </div>
               );
             })}
