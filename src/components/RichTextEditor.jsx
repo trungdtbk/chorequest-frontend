@@ -5,6 +5,9 @@ import Link from '@tiptap/extension-link';
 import { useEffect } from 'react';
 import { Bold, Italic, List, ListOrdered, Link as LinkIcon, X } from 'lucide-react';
 import { useState, useCallback } from 'react';
+import BulletList from '@tiptap/extension-bullet-list';
+import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
 
 // --- Link Popup ---
 function LinkPopup({ onInsert, onClose }) {
@@ -145,8 +148,22 @@ export default function RichTextEditor({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        link: false, // We'll use our own Link extension with custom options
+        link: false,
+        bulletList: false,
+        orderedList: false,
+        listItem: false,
       }),
+      BulletList.configure({
+        HTMLAttributes: {
+          class: 'list-disc pl-5 my-1',
+        },
+      }),
+      OrderedList.configure({
+        HTMLAttributes: {
+          class: 'list-decimal pl-5 my-1',
+        },
+      }),
+      ListItem,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
