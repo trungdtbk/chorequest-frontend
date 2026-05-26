@@ -27,6 +27,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { getMondayOfWeekForGivenDate, toISO } from '../utils/dateUtils';
+import RichTextDisplay from '../components/RichTextDisplay';
 
 const DIFFICULTY_OPTIONS = [
   { value: 'easy', label: 'Easy', level: 1 },
@@ -428,9 +429,10 @@ export default function Chores() {
 
                 {/* Description */}
                 {chore.description && (
-                  <p className="text-muted text-xs line-clamp-2">
-                    {themedDescription(chore.title, chore.description, colorTheme)}
-                  </p>
+                  // <p className="text-muted text-xs line-clamp-2">
+                  //   {themedDescription(chore.title, chore.description, colorTheme)}
+                  // </p>
+                  <RichTextDisplay content={chore.description} />
                 )}
 
                 {/* Meta row */}

@@ -8,6 +8,7 @@ import {
   Star,
   Scroll,
 } from 'lucide-react';
+import RichTextEditor from './RichTextEditor';
 
 const DIFFICULTY_OPTIONS = [
   { value: 'easy', label: 'Easy', level: 1 },
@@ -234,12 +235,17 @@ export default function QuestCreateModal({
           <label className="block text-cream text-sm font-medium mb-1 tracking-wide">
             Description
           </label>
-          <textarea
+          {/* <textarea
             value={form.description}
             onChange={(e) => updateForm('description', e.target.value)}
             placeholder="Describe the quest details..."
             rows={3}
             className="field-input resize-none"
+          /> */}
+          <RichTextEditor
+            value={form.description}
+            onChange={(val) => updateForm('description', val)}
+            placeholder="Describe the quest details..."
           />
         </div>
 

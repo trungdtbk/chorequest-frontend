@@ -22,6 +22,8 @@ import {
   Users,
 } from 'lucide-react';
 
+import RichTextDisplay from '../components/RichTextDisplay';
+
 const DIFFICULTY_LEVEL = { easy: 1, medium: 2, hard: 3, expert: 4 };
 const DIFFICULTY_LABELS = ['Trivial', 'Easy', 'Medium', 'Hard', 'Legendary'];
 const DIFFICULTY_COLORS = [
@@ -344,9 +346,10 @@ export default function ChoreDetail() {
         {/* Description */}
         {chore.description && (
           <div className="pl-10">
-            <p className="text-muted text-sm leading-relaxed">
+            {/* <p className="text-muted text-sm leading-relaxed">
               {themedDescription(chore.title, chore.description, colorTheme)}
-            </p>
+            </p> */}
+            <RichTextDisplay content={chore.description} />
           </div>
         )}
 
