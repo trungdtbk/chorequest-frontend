@@ -91,7 +91,7 @@ export async function api(path, options = {}) {
     } catch {
       // Response wasn't JSON (server error page, etc.)
     }
-    throw new Error(detail);
+    throw new Error(text);
   }
 
   const text = await res.text();
