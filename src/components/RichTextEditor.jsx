@@ -2,12 +2,13 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
-import { useEffect } from 'react';
-import { Bold, Italic, List, ListOrdered, Link as LinkIcon, X } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import Image from '@tiptap/extension-image';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { Bold, Italic, List, ListOrdered, Link as LinkIcon, Image as ImageIcon, X } from 'lucide-react';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import ListItem from '@tiptap/extension-list-item';
+import { api } from '../api/client';
 
 // --- Link Popup ---
 function LinkPopup({ onInsert, onClose }) {
@@ -49,7 +50,7 @@ function LinkPopup({ onInsert, onClose }) {
 }
 
 // --- Toolbar ---
-function Toolbar({ editor }) {
+function Toolbar({ editor, onImageButtonClick }) {
   const [showLinkPopup, setShowLinkPopup] = useState(false);
 
   const insertLink = useCallback((url, label) => {
@@ -110,6 +111,17 @@ function Toolbar({ editor }) {
 
       <div className="w-px h-4 bg-border mx-1" />
 
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); onImageButtonClick(); }}
+        className={btn(false)}
+        title="Insert image"
+      >
+        <ImageIcon size={14} />
+      </button>
+
+      <div className="w-px h-4 bg-border mx-1" />
+
       <div className="relative">
         <button
           type="button"
@@ -145,6 +157,8 @@ export default function RichTextEditor({
   placeholder = 'Write something...',
   className = '',
 }) {
+  const uploadInputRef = useRef(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -172,6 +186,13 @@ export default function RichTextEditor({
           rel: 'noopener noreferrer',
         },
       }),
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: {
+          class: 'rounded-md my-3',
+        },
+      }),
     ],
     content: value || '',
     editorProps: {
@@ -185,6 +206,41 @@ export default function RichTextEditor({
     },
   });
 
+  const uploadImages = useCallback(async (files) => {
+    if (!editor || !files?.length) return;
+
+    for (const file of Array.from(files)) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const data = await api('/api/uploads', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (data?.path) {
+          console.log('Image uploaded:', data.path);
+          editor.chain().focus().setImage({ src: data.path, alt: file.name }).run();
+        }
+      } catch (error) {
+        console.error('Unable to upload image:', error);
+      }
+    }
+  }, [editor]);
+
+  const openImagePicker = useCallback(() => {
+    uploadInputRef.current?.click();
+  }, []);
+
+  const handleImageSelection = useCallback((event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      uploadImages(files);
+      event.target.value = '';
+    }
+  }, [uploadImages]);
+
   // Sync external value changes (e.g. switching quests)
   useEffect(() => {
     if (!editor) return;
@@ -196,7 +252,7 @@ export default function RichTextEditor({
 
   return (
     <div className={`rounded border border-border bg-surface-raised overflow-visible ${className}`}>
-      <Toolbar editor={editor} />
+      <Toolbar editor={editor} onImageButtonClick={openImagePicker} />
       <div className="p-3 relative">
         {!value && !editor?.getText() && (
           <div className="absolute top-4 left-4 text-muted text-sm pointer-events-none">
@@ -204,6 +260,14 @@ export default function RichTextEditor({
           </div>
         )}
         <EditorContent editor={editor} />
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleImageSelection}
+        />
       </div>
     </div>
   );
