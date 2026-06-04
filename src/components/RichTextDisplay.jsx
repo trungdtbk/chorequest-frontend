@@ -44,7 +44,7 @@ export default function RichTextDisplay({ content, className = '' }) {
           [&_li]:my-0.5
           [&_a]:text-accent [&_a]:underline [&_a]:hover:opacity-80
           [&_p]:my-0.5
-          [&_img]:w-[200px] [&_img]:rounded-md [&_img]:border [&_img]:border-border [&_img]:my-2 [&_img]:object-cover
+          [&_img]:inline-block [&_img]:w-full sm:[&_img]:w-1/2 [&_img]:max-w-full [&_img]:h-auto [&_img]:align-top [&_img]:px-1 [&_img]:rounded-md [&_img]:border [&_img]:border-border [&_img]:my-2 [&_img]:object-cover [&_img]:box-border
           ${className}
         `}
         dangerouslySetInnerHTML={{ __html: content }}
