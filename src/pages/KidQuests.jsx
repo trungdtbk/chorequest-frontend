@@ -15,6 +15,7 @@ import { api } from '../api/client';
 import { useTheme } from '../hooks/useTheme';
 import { themedTitle, themedDescription } from '../utils/questThemeText';
 import AvatarDisplay from '../components/AvatarDisplay';
+import RichTextDisplay from '../components/RichTextDisplay';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: 'text-muted', icon: Clock },
@@ -194,7 +195,7 @@ export default function KidQuests() {
                     </div>
                     {a.chore.description && (
                       <p className="text-muted text-xs line-clamp-1 mb-1.5">
-                        {themedDescription(a.chore.title, a.chore.description, colorTheme)}
+                        <RichTextDisplay content={a.chore.description} />
                       </p>
                     )}
                     <div className="flex items-center flex-wrap gap-3">
