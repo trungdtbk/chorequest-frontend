@@ -269,7 +269,8 @@ export default function Rewards() {
       )}
 
       {(() => {
-        const categories = [...new Set(rewards.map(r => r.category).filter(Boolean))];
+        const visibleRewards = isKid ? rewards.filter(r => !r.category?.startsWith('pet_power')) : rewards;
+        const categories = [...new Set(visibleRewards.map(r => r.category).filter(Boolean))];
         if (categories.length === 0) return null;
         return (
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
@@ -324,7 +325,8 @@ export default function Rewards() {
       )}
 
       {(() => {
-        const filtered = categoryFilter === 'all' ? rewards : rewards.filter(r => r.category === categoryFilter);
+        const visibleRewards = isKid ? rewards.filter(r => !r.category?.startsWith('pet_power')) : rewards;
+        const filtered = categoryFilter === 'all' ? visibleRewards : visibleRewards.filter(r => r.category === categoryFilter);
         return filtered;
       })().length === 0 && rewards.length > 0 ? (
         <div className="game-panel p-8 text-center">
@@ -351,96 +353,99 @@ export default function Rewards() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(categoryFilter === 'all' ? rewards : rewards.filter(r => r.category === categoryFilter)).map((reward) => {
-            const outOfStock = isOutOfStock(reward);
-            const affordable = canAfford(reward);
-            const cost = reward.point_cost ?? reward.cost ?? 0;
+          {(() => {
+            const visibleRewards = isKid ? rewards.filter(r => !r.category?.startsWith('pet_power')) : rewards;
+            return (categoryFilter === 'all' ? visibleRewards : visibleRewards.filter(r => r.category === categoryFilter)).map((reward) => {
+              const outOfStock = isOutOfStock(reward);
+              const affordable = canAfford(reward);
+              const cost = reward.point_cost ?? reward.cost ?? 0;
 
-            return (
-              <div
-                key={reward.id}
-                className={`game-panel p-4 flex flex-col gap-2 ${outOfStock ? 'opacity-60' : ''}`}
-              >
-                <div className="flex items-start gap-2.5">
-                  <div className="w-10 h-10 rounded-md bg-surface-raised border border-border flex items-center justify-center flex-shrink-0">
-                    {reward.icon ? (
-                      <span className="text-xl">{reward.icon}</span>
-                    ) : (
-                      <Sparkles size={18} className="text-accent" />
+              return (
+                <div
+                  key={reward.id}
+                  className={`game-panel p-4 flex flex-col gap-2 ${outOfStock ? 'opacity-60' : ''}`}
+                >
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-10 h-10 rounded-md bg-surface-raised border border-border flex items-center justify-center flex-shrink-0">
+                      {reward.icon ? (
+                        <span className="text-xl">{reward.icon}</span>
+                      ) : (
+                        <Sparkles size={18} className="text-accent" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-cream text-sm font-medium">{reward.title}</h3>
+                      {reward.description && (
+                        <p className="text-muted text-xs mt-0.5 line-clamp-2">{reward.description}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-1">
+                      <Coins size={14} className="text-gold" />
+                      <span className="text-gold text-sm font-medium">{cost} XP</span>
+                    </div>
+                    {reward.category && (
+                      <span className="px-1.5 py-0.5 rounded-md text-[10px] font-medium border border-border bg-surface-raised text-muted">
+                        {reward.category}
+                      </span>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-cream text-sm font-medium">{reward.title}</h3>
-                    {reward.description && (
-                      <p className="text-muted text-xs mt-0.5 line-clamp-2">{reward.description}</p>
-                    )}
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="flex items-center gap-1">
-                    <Coins size={14} className="text-gold" />
-                    <span className="text-gold text-sm font-medium">{cost} XP</span>
-                  </div>
-                  {reward.category && (
-                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-medium border border-border bg-surface-raised text-muted">
-                      {reward.category}
-                    </span>
+                  {reward.stock != null && (
+                    <div className="flex items-center gap-1.5">
+                      <Package size={12} className={outOfStock ? 'text-crimson' : 'text-muted'} />
+                      {outOfStock ? (
+                        <span className="text-crimson text-xs font-medium">Sold Out</span>
+                      ) : (
+                        <span className="text-muted text-xs">{reward.stock} left</span>
+                      )}
+                    </div>
                   )}
-                </div>
 
-                {reward.stock != null && (
-                  <div className="flex items-center gap-1.5">
-                    <Package size={12} className={outOfStock ? 'text-crimson' : 'text-muted'} />
-                    {outOfStock ? (
-                      <span className="text-crimson text-xs font-medium">Sold Out</span>
-                    ) : (
-                      <span className="text-muted text-xs">{reward.stock} left</span>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-center gap-1.5 mt-auto pt-1">
-                  {isKid && (
-                    <button
-                      onClick={() => handleRedeem(reward)}
-                      disabled={!affordable || outOfStock || redeemingId === reward.id}
-                      className={`game-btn game-btn-gold flex-1 flex items-center justify-center gap-1.5 ${
-                        !affordable || outOfStock ? 'opacity-40 cursor-not-allowed' : ''
-                      } ${redeemingId === reward.id ? 'opacity-60 cursor-wait' : ''}`}
-                    >
-                      <Coins size={12} />
-                      {redeemingId === reward.id
-                        ? 'Claiming...'
-                        : !affordable
-                        ? 'Not Enough XP'
-                        : outOfStock
-                        ? 'Sold Out'
-                        : 'Redeem'}
-                    </button>
-                  )}
-                  {isParent && (
-                    <>
+                  <div className="flex items-center gap-1.5 mt-auto pt-1">
+                    {isKid && (
                       <button
-                        onClick={() => openEditModal(reward)}
-                        className="p-1.5 rounded-md hover:bg-surface-raised transition-colors text-muted hover:text-accent"
-                        aria-label="Edit reward"
+                        onClick={() => handleRedeem(reward)}
+                        disabled={!affordable || outOfStock || redeemingId === reward.id}
+                        className={`game-btn game-btn-gold flex-1 flex items-center justify-center gap-1.5 ${
+                          !affordable || outOfStock ? 'opacity-40 cursor-not-allowed' : ''
+                        } ${redeemingId === reward.id ? 'opacity-60 cursor-wait' : ''}`}
                       >
-                        <Pencil size={14} />
+                        <Coins size={12} />
+                        {redeemingId === reward.id
+                          ? 'Claiming...'
+                          : !affordable
+                          ? 'Not Enough XP'
+                          : outOfStock
+                          ? 'Sold Out'
+                          : 'Redeem'}
                       </button>
-                      <button
-                        onClick={() => setDeleteTarget(reward)}
-                        className="p-1.5 rounded-md hover:bg-surface-raised transition-colors text-muted hover:text-crimson"
-                        aria-label="Delete reward"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
-                  )}
+                    )}
+                    {isParent && (
+                      <>
+                        <button
+                          onClick={() => openEditModal(reward)}
+                          className="p-1.5 rounded-md hover:bg-surface-raised transition-colors text-muted hover:text-accent"
+                          aria-label="Edit reward"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(reward)}
+                          className="p-1.5 rounded-md hover:bg-surface-raised transition-colors text-muted hover:text-crimson"
+                          aria-label="Delete reward"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
       )}
 
