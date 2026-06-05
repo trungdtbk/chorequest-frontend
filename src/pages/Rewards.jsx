@@ -28,6 +28,7 @@ const emptyForm = {
   icon: '',
   stock: '',
   category: '',
+  auto_fulfill: false,
 };
 
 const TABS = [
@@ -127,6 +128,7 @@ export default function Rewards() {
       icon: reward.icon || '',
       stock: reward.stock != null ? String(reward.stock) : '',
       category: reward.category || '',
+      auto_fulfill: reward.auto_fulfill || false,
     });
     setFormError('');
     setShowModal(true);
@@ -161,6 +163,7 @@ export default function Rewards() {
       point_cost: Number(form.point_cost),
       icon: form.icon || undefined,
       category: form.category.trim() || undefined,
+      auto_fulfill: form.auto_fulfill || false,
     };
 
     if (form.stock !== '') {
@@ -483,6 +486,11 @@ export default function Rewards() {
             <label className="block text-cream text-sm font-medium mb-1">Stock (Optional)</label>
             <input type="number" min={0} value={form.stock} onChange={(e) => updateForm('stock', e.target.value)} placeholder="Leave empty for unlimited" className="field-input" />
             <p className="text-muted text-xs mt-1">Leave empty for unlimited supply.</p>
+          </div>
+          <div>
+            <label className="block text-cream text-sm font-medium mb-1">Auto Fulfill (Optional)</label>
+            <input type="checkbox" checked={form.auto_fulfill} onChange={(e) => updateForm('auto_fulfill', e.target.checked)} className="field-input" />
+            <p className="text-muted text-xs mt-1">Auto Fulfill rewards are given out immediately.</p>
           </div>
         </div>
       </Modal>
