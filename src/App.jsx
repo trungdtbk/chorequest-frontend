@@ -21,6 +21,7 @@ const Events = lazy(() => import('./pages/Events'));
 const KidQuests = lazy(() => import('./pages/KidQuests'));
 const Party = lazy(() => import('./pages/Party'));
 const AvatarEditor = lazy(() => import('./components/AvatarEditor'));
+const ChoreQuestBattler = lazy(() => import('./pages/PetBattler'));
 
 function Loading() {
   return (
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/kids/:kidId" element={<KidQuests />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/battle" element={<ChoreQuestBattler />} />
           {user.role === 'admin' && <Route path="/admin" element={<AdminDashboard />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -509,14 +509,15 @@ export default function KidDashboard() {
               { action: 'feed', icon: Heart, label: 'Feed', color: 'game-btn-red' },
               { action: 'pet', icon: HandHeart, label: 'Pet', color: 'game-btn-blue' },
               { action: 'play', icon: Gamepad2, label: 'Play', color: 'game-btn-purple' },
+              { action: 'battle', icon: Sword, label: 'Battle', color: 'game-btn-gold' },
             ].map(({ action, icon: Icon, label, color }) => (
               <button
                 key={action}
-                onClick={() => handlePetInteraction(action)}
-                disabled={!!petInteracting || interactionsRemaining <= 0}
+                onClick={() => action === 'battle' ? navigate('/battle') : handlePetInteraction(action)}
+                disabled={!!petInteracting || (action !== 'battle' && interactionsRemaining <= 0)}
                 className={`game-btn ${color} flex-1 flex items-center justify-center gap-1.5 !py-2 text-xs ${
                   petInteracting === action ? 'opacity-60 cursor-wait' : ''
-                } ${interactionsRemaining <= 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                } ${action !== 'battle' && interactionsRemaining <= 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
               >
                 {petInteracting === action ? (
                   <Loader2 size={14} className="animate-spin" />
